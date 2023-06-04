@@ -81,7 +81,7 @@ static int write_file(struct seq_file *the_file, void *v){
             if(child_split){
                 seq_printf(the_file, ",");
             }
-            seq_printf(the_file, "%d", child->pid);
+            seq_printf(the_file, "\n{ \"pid\" : %d, \"name\" : \"%s\"}", child->pid, child->comm);
             child_split = 1;
         }
         seq_printf(the_file, "]}\n");
