@@ -52,42 +52,6 @@ static int write_file(struct seq_file *the_file, void *v){
     seq_printf(the_file, ",\"ram_occupied\":");
     seq_printf(the_file, "%ld", (info.totalram-info.freeram) * info.mem_unit / 1024 / 1024);
     seq_printf(the_file, "},\n");
-    // CPU Information
-    int ram, split, child_split;
-    split = 0;
-    child_split = 0;
-    seq_printf(the_file, "[");
-    for_each_process(cpu){
-        if(split){
-            seq_printf(the_file, ",");
-        }
-        seq_printf(the_file, "{\"pid\":");
-        seq_printf(the_file, "%d", cpu->pid);
-        seq_printf(the_file, ",\"name\":");
-        seq_printf(the_file, "\"%s\"", cpu->comm);
-        seq_printf(the_file, ",\"user\":");
-        seq_printf(the_file, "%d", cpu->real_cred->uid);
-        seq_printf(the_file, ",\"status\":");
-        seq_printf(the_file, "%d", cpu->__state);
-        if (cpu->mm) {
-            ram = (get_mm_rss(cpu->mm)<<PAGE_SHIFT)/(1024*1024);
-            seq_printf(the_file, ",\"ram\":");
-            seq_printf(the_file, "%d", ram);
-        }
-        seq_printf(the_file, ",\"children\":[");
-        child_split = 0;
-        list_for_each(lstProcess, &(cpu->children)){
-            child = list_entry(lstProcess, struct task_struct, sibling);
-            if(child_split){
-                seq_printf(the_file, ",");
-            }
-            seq_printf(the_file, "\n{ \"pid\" : %d, \"name\" : \"%s\"}", child->pid, child->comm);
-            child_split = 1;
-        }
-        seq_printf(the_file, "]}\n");
-        split = 1;
-    }
-    seq_printf(the_file, "]\n");
     return 0;
 }
 
