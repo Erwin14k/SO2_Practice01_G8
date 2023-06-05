@@ -1,4 +1,4 @@
-obj-m += ram_202000119.o
+obj-m += mem_grupo8.o
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules

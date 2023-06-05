@@ -26,7 +26,7 @@
 
 
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("MOdulo RAM, Laboratorio Sistemas Operativos 1");
+MODULE_DESCRIPTION("Modulo RAM, Laboratorio Sistemas Operativos 2");
 MODULE_AUTHOR("Sergie Daniel Arizandieta Yol");
 
 static int calcular_porcentaje_cpu_total(void)
@@ -144,7 +144,7 @@ static int al_abrir(struct inode *inode, struct file *file)
     return single_open(file, escribir_archivo, NULL);
 }
 
-// Si el su Kernel es 5.6 o mayor
+// Si el Kernel es 5.6 o mayor
 static struct proc_ops operaciones =
 {
     .proc_open = al_abrir,
@@ -153,15 +153,15 @@ static struct proc_ops operaciones =
 
 static int _insert(void)
 {
-    proc_create("cpu_202000119", 0, NULL, &operaciones);
-    printk(KERN_INFO "Sergie Daniel Arizandieta Yol\n");
+    proc_create("cpu_grupo8", 0, NULL, &operaciones);
+    printk(KERN_INFO "Hola mundo, somos el grupo 8 y este es el monitor de CPU\n");
     return 0;
 }
 
 static void _remove(void)
 {
-    remove_proc_entry("cpu_202000119", NULL);
-    printk(KERN_INFO "Primer Semestre 2023\n");
+    remove_proc_entry("cpu_grupo8", NULL);
+    printk(KERN_INFO "Sayonara mundo, somos el grupo 8 y este fue el monitor de CPU\n");
 }
 
 module_init(_insert);

@@ -1,82 +1,113 @@
 package main
 
 import (
-	"encoding/json" // Package for JSON encoding and decoding
-	"io/ioutil"     // Package for file I/O operations
-	"net/http"      // Package for HTTP-related operations
-	"log"          // Package for logging
-	"fmt"          // Package for formatted I/O
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os/exec"
+	"strconv"
+	"strings"
 )
 
-var singleModule = "/proc/mem_grupo8" // File path for the data source
-var D data // Variable to hold the parsed JSON data
-
-type process struct {
-    pid        int    `json:"pid"` // Process ID
-    name       string `json:"name"` // Process name
-    user       string `json:"user"` // User associated with the process
-    status     int    `json:"status"` // Process status
-    ram        int    `json:"ram"` // RAM usage of the process
-    children   []struct {
-        Pid    int    `json:"Pid"` // Child process ID
-        Nombre string `json:"Nombre"` // Child process name
-    } `json:"children"` // Child processes of the main process
+type Process struct {
+	Pid     int    `json:"pid"`
+	Nombre  string `json:"nombre"`
+	Usuario string `json:"usuario"`
+	Estado  int    `json:"estado"`
+	Ram     int    `json:"ram"`
+	Padre   int    `json:"padre"`
 }
 
-type data struct {
-    processes []process   `json:"processes"` // List of processes
-    total_ram     string  `json:"total_ram"` // Total RAM available
-    free_ram      string  `json:"free_ram"` // Free RAM
-    ram_occupied  string  `json:"ram_occupied"` // Occupied RAM
-    counters struct {
-        running   int `json:"running"` // Number of running processes
-        suspended int `json:"suspended"` // Number of suspended processes
-        stopped   int `json:"stopped"` // Number of stopped processes
-        zombies   int `json:"zombies"` // Number of zombie processes
-        total     int `json:"total"` // Total number of processes
-    } `json:"counters"` // Process counters
+type CPUInfo struct {
+	TotalCPU int       `json:"totalcpu"`
+	Running  int       `json:"running"`
+	Sleeping int       `json:"sleeping"`
+	Stopped  int       `json:"stopped"`
+	Zombie   int       `json:"zombie"`
+	Total    int       `json:"total"`
+	Tasks    []Process `json:"tasks"`
 }
 
-func getProcessData() {
-    // Read data from the specified file
-    data, err := ioutil.ReadFile(singleModule)
-    if err != nil {
-        fmt.Println(err)
-    }
-    // Unmarshal the JSON data into the 'D' variable
-    err = json.Unmarshal(data, &D)
-    if err != nil {
-        fmt.Println(err)
-    }
-}
-
-func createData() string {
-	getProcessData() // Call the function to retrieve process data
-
-	b, err := json.Marshal(D) // Convert the data into JSON format
+func createData() (string, error) {
+	cmdRAM := exec.Command("sh", "-c", "cat /proc/mem_grupo8")
+	outRAM, err := cmdRAM.CombinedOutput()
 	if err != nil {
-		log.Println("Error converting to JSON") // Log an error if the conversion fails
-		return ""
+		fmt.Println("Error: Ram file cannot be readed", err)
+		return "", err
 	}
-	return string(b) // Return the JSON data as a string
+
+	cmdCPU := exec.Command("sh", "-c", "cat /proc/cpu_grupo8")
+	outCPU, err := cmdCPU.CombinedOutput()
+	if err != nil {
+		fmt.Println("Error: Cpu file cannot be readed", err)
+		return "", err
+	}
+
+	var cpuInfo CPUInfo
+	err = json.Unmarshal([]byte(outCPU), &cpuInfo)
+	if err != nil {
+		fmt.Println("Error: Cpu json unmarshal failed", err)
+		return "", err
+	}
+
+	for i, task := range cpuInfo.Tasks {
+		uid, err := strconv.Atoi(task.Usuario)
+		if err != nil {
+			fmt.Println("Error: Failed to convert UID to int", err)
+			return "", err
+		}
+
+		cmdUsr := exec.Command("sh", "-c", "grep -m 1 '"+strconv.Itoa(uid)+":' /etc/passwd | cut -d: -f1")
+		outUsr, err := cmdUsr.Output()
+		if err != nil {
+			fmt.Println("Error: Failed to get username for UID ", task.Usuario, err)
+			return "", err
+		}
+		username := strings.TrimSpace(string(outUsr))
+		cpuInfo.Tasks[i].Usuario = username
+	}
+
+	cpuData, err := json.Marshal(cpuInfo)
+	if err != nil {
+		fmt.Println("Error: Cpu json marshal failed", err)
+		return "", err
+	}
+
+	// --------- RAM ---------
+	var mapRAM map[string]int
+	err = json.Unmarshal([]byte(outRAM), &mapRAM)
+	if err != nil {
+		fmt.Println("Error: Ram json unmarshal failed", err)
+		return "", err
+	}
+
+	ramData, err := json.Marshal(mapRAM)
+	if err != nil {
+		fmt.Println("Error: Ram json marshal failed", err)
+		return "", err
+	}
+
+	allData := fmt.Sprintf(`{"cpuData": %s, "ramData": %s}`, cpuData, ramData)
+	return allData, nil
 }
 
 func handleGet(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet { // Check if the HTTP method is GET
-		w.WriteHeader(http.StatusMethodNotAllowed) // Return HTTP 405 Method Not Allowed if it's not GET
+	if r.Method != http.MethodGet { // Comprobar si el método HTTP es GET
+		w.WriteHeader(http.StatusMethodNotAllowed) // Devolver HTTP 405 Method Not Allowed si no es GET
 		return
 	}
 
-	allData := createData() // Retrieve all the process data as JSON
-	if allData == "" {
-		w.WriteHeader(http.StatusInternalServerError) // Return HTTP 500 Internal Server Error if the data is empty
+	allData, err := createData() // Obtener todos los datos de los procesos en formato JSON
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError) // Devolver HTTP 500 Internal Server Error si los datos están vacíos
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json") // Set the response header to indicate JSON content type
-	fmt.Fprint(w, allData) // Write the JSON data to the response writer
+	w.Header().Set("Content-Type", "application/json") // Establecer la cabecera de la respuesta para indicar el tipo de contenido JSON
+	fmt.Fprint(w, allData)                              // Escribir los datos JSON en el escritor de la respuesta
 }
-
 
 func handlePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost { // Check if the HTTP method is POST

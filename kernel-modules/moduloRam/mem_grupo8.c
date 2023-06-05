@@ -1,8 +1,6 @@
 #include <linux/sysinfo.h>
 #include <linux/mm.h> 
 //Header para la ram
-
-
 #include <linux/module.h>
 // para usar KERN_INFO
 #include <linux/kernel.h>
@@ -18,7 +16,7 @@
 
 
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("MOdulo RAM, Laboratorio Sistemas Operativos 1");
+MODULE_DESCRIPTION("Modulo RAM, Laboratorio Sistemas Operativos 2");
 MODULE_AUTHOR("Sergie Daniel Arizandieta Yol");
 
 
@@ -27,7 +25,7 @@ static int escribir_archivo(struct seq_file *archivo, void *v)
     struct sysinfo info;
     si_meminfo(&info);
 
-     seq_printf(archivo, "{\n");
+    seq_printf(archivo, "{\n");
     seq_printf(archivo, "\"totalram\":%lu,\n", info.totalram * info.mem_unit / 1024 / 1024);
     seq_printf(archivo, "\"ramlibre\":%lu,\n", info.freeram * info.mem_unit / 1024 / 1024);
     seq_printf(archivo, "\"ramocupada\":%lu\n", (info.totalram -  info.freeram )* info.mem_unit / 1024 / 1024);
@@ -42,7 +40,7 @@ static int al_abrir(struct inode *inode, struct file *file)
     return single_open(file, escribir_archivo, NULL);
 }
 
-// Si el su Kernel es 5.6 o mayor
+// Si el Kernel es 5.6 o mayor
 static struct proc_ops operaciones =
 {
     .proc_open = al_abrir,
@@ -51,15 +49,15 @@ static struct proc_ops operaciones =
 
 static int _insert(void)
 {
-    proc_create("ram_202000119", 0, NULL, &operaciones);
-    printk(KERN_INFO "202000119\n");
+    proc_create("mem_grupo8", 0, NULL, &operaciones);
+    printk(KERN_INFO "Hola mundo, somos el grupo 8 y este es el monitor de memoria\n");
     return 0;
 }
 
 static void _remove(void)
 {
-    remove_proc_entry("ram_202000119", NULL);
-    printk(KERN_INFO "LABORATORIO SISTEMAS OPERATIVOS 1 Sección A\n");
+    remove_proc_entry("mem_grupo8", NULL);
+    printk(KERN_INFO "Sayonara mundo, somos el grupo 8 y este fue el monitor de memoria\n");
 }
 
 module_init(_insert);
