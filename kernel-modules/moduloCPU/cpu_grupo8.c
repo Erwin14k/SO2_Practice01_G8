@@ -59,6 +59,31 @@ static int calcular_porcentaje_cpu_total(void)
     return porcentaje;
 }
 
+static const char* obtain_state(int estado)
+{
+    const char* estado_str;
+
+    switch (estado) {
+        case 0:
+            estado_str = "ejecucion";
+            break;
+        case 1:
+        case 1026:
+            estado_str = "suspendido";
+            break;
+        case 128:
+            estado_str = "detenido";
+            break;
+        case 260:
+            estado_str = "zombie";
+            break;
+        default:
+            estado_str = "desconocido";
+            break;
+    }
+
+    return estado_str;
+}
 
 static int escribir_archivo(struct seq_file *archivo, void *v)
 {
@@ -91,10 +116,11 @@ static int escribir_archivo(struct seq_file *archivo, void *v)
             seq_printf(archivo, "%d", cpu->pid);
             seq_printf(archivo, ",\"nombre\":");
             seq_printf(archivo, "\"%s\"", cpu->comm);
-            seq_printf(archivo, ",\"usuario\":");
-            seq_printf(archivo, "%d", cpu->real_cred->uid);
-            seq_printf(archivo, ",\"estado\":");
-            seq_printf(archivo, "%d", cpu->__state);
+            seq_printf(archivo, ",\"usuario\": \"");
+            seq_printf(archivo, "%s", cpu->real_cred->uid);
+            seq_printf(archivo, "\",\"estado\": \"");
+            seq_printf(archivo, "%s", obtain_state(cpu->__state));
+            seq_printf("\"");
             if (cpu->mm) {
                 ram = (get_mm_rss(cpu->mm)<<PAGE_SHIFT)/(1024*1024); // MB
                 seq_printf(archivo, ",\"ram\":");

@@ -2,20 +2,20 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os/exec"
 	"strconv"
 	"strings"
+	"log"
+	"fmt"
 )
 
 type Process struct {
 	Pid     int    `json:"pid"`
 	Nombre  string `json:"nombre"`
 	Usuario string `json:"usuario"`
-	Estado  int    `json:"estado"`
+	Estado  string `json:"estado"`
 	Ram     int    `json:"ram"`
 	Padre   int    `json:"padre"`
 }
@@ -30,28 +30,57 @@ type CPUInfo struct {
 	Tasks    []Process `json:"tasks"`
 }
 
+type RAMInfo struct {
+	TotalRAM    int  `json:"totalram"`
+	RAMLibre    int  `json:"ramlibre"`
+	RAMOcupada  int  `json:"ramocupada"`
+}
+
+type general struct {
+	TotalRAM    int  `json:"totalram"`
+	RAMLibre    int  `json:"ramlibre"`
+	RAMOcupada  int  `json:"ramocupada"`
+	TotalCPU    int  `json:"totalcpu"`
+}
+
+type counters struct {
+	Running  int  `json:"running"`
+	Sleeping int  `json:"sleeping"`
+	Stopped  int  `json:"stopped"`
+	Zombie   int  `json:"zombie"`
+	Total    int  `json:"total"`
+}
+
+type AllData struct {
+	AllGenerales    []general   `json:"AllGenerales"`
+	AllTipoProcesos []Process   `json:"AllTipoProcesos"`
+	AllProcesos     []counters	`json:"AllProcesos"`
+}
+
+// Function to create data by reading CPU and RAM information
 func createData() (string, error) {
-	cmdRAM := exec.Command("sh", "-c", "cat /proc/mem_grupo8")
-	outRAM, err := cmdRAM.CombinedOutput()
+
+	// Read RAM information from "/proc/mem_grupo8"
+	outRAM, err := ioutil.ReadFile("/proc/mem_grupo8")
 	if err != nil {
-		fmt.Println("Error: Ram file cannot be readed", err)
-		return "", err
+		fmt.Println(err)
 	}
 
-	cmdCPU := exec.Command("sh", "-c", "cat /proc/cpu_grupo8")
-	outCPU, err := cmdCPU.CombinedOutput()
+	// Read CPU information from "/proc/cpu_grupo8"
+	outCPU, err := ioutil.ReadFile("/proc/cpu_grupo8")
 	if err != nil {
-		fmt.Println("Error: Cpu file cannot be readed", err)
-		return "", err
+		fmt.Println(err)
 	}
 
+	// Unmarshal CPU information into CPUInfo struct
 	var cpuInfo CPUInfo
-	err = json.Unmarshal([]byte(outCPU), &cpuInfo)
+	err = json.Unmarshal(outCPU, &cpuInfo)
 	if err != nil {
 		fmt.Println("Error: Cpu json unmarshal failed", err)
 		return "", err
 	}
 
+	// Iterate over CPU tasks and retrieve username for each UID
 	for i, task := range cpuInfo.Tasks {
 		uid, err := strconv.Atoi(task.Usuario)
 		if err != nil {
@@ -59,6 +88,7 @@ func createData() (string, error) {
 			return "", err
 		}
 
+		// Execute shell command to retrieve username for UID
 		cmdUsr := exec.Command("sh", "-c", "grep -m 1 '"+strconv.Itoa(uid)+":' /etc/passwd | cut -d: -f1")
 		outUsr, err := cmdUsr.Output()
 		if err != nil {
@@ -69,62 +99,96 @@ func createData() (string, error) {
 		cpuInfo.Tasks[i].Usuario = username
 	}
 
-	cpuData, err := json.Marshal(cpuInfo)
-	if err != nil {
-		fmt.Println("Error: Cpu json marshal failed", err)
-		return "", err
-	}
-
-	// --------- RAM ---------
-	var mapRAM map[string]int
-	err = json.Unmarshal([]byte(outRAM), &mapRAM)
+	// Unmarshal RAM information into RAMInfo struct
+	var ramInfo RAMInfo
+	err = json.Unmarshal(outRAM, &ramInfo)
 	if err != nil {
 		fmt.Println("Error: Ram json unmarshal failed", err)
 		return "", err
 	}
 
-	ramData, err := json.Marshal(mapRAM)
+	// Create AllData struct with all the information
+	allData := AllData{
+		AllGenerales: []general{
+			{
+				TotalRAM:     ramInfo.TotalRAM,
+				RAMLibre:     ramInfo.RAMLibre,
+				RAMOcupada:   ramInfo.RAMOcupada,
+				TotalCPU:     cpuInfo.TotalCPU,
+			},
+		},
+		AllTipoProcesos: cpuInfo.Tasks,
+		AllProcesos: []counters{
+			{
+				Running:  cpuInfo.Running,
+				Sleeping: cpuInfo.Sleeping,
+				Stopped:  cpuInfo.Stopped,
+				Zombie:   cpuInfo.Zombie,
+				Total:    cpuInfo.Total,
+			},
+		},
+	}
+
+	// Marshal AllData struct into JSON format
+	allDataJSON, err := json.Marshal(allData)
 	if err != nil {
-		fmt.Println("Error: Ram json marshal failed", err)
+		fmt.Println("Error: AllData json marshal failed", err)
 		return "", err
 	}
 
-	allData := fmt.Sprintf(`{"cpuData": %s, "ramData": %s}`, cpuData, ramData)
-	return allData, nil
+	return string(allDataJSON), nil
 }
 
+// Handler for GET requests
 func handleGet(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet { // Comprobar si el método HTTP es GET
-		w.WriteHeader(http.StatusMethodNotAllowed) // Devolver HTTP 405 Method Not Allowed si no es GET
+	if r.Method != http.MethodGet { 
+		w.WriteHeader(http.StatusMethodNotAllowed) 
 		return
 	}
 
-	allData, err := createData() // Obtener todos los datos de los procesos en formato JSON
+	allData, err := createData() 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) // Devolver HTTP 500 Internal Server Error si los datos están vacíos
+		w.WriteHeader(http.StatusInternalServerError) 
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json") // Establecer la cabecera de la respuesta para indicar el tipo de contenido JSON
-	fmt.Fprint(w, allData)                              // Escribir los datos JSON en el escritor de la respuesta
+	w.Header().Set("Content-Type", "application/json") 
+	fmt.Fprint(w, allData)                              
 }
 
+// Handler for POST requests to delete a process
 func handlePost(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost { // Check if the HTTP method is POST
-		w.WriteHeader(http.StatusMethodNotAllowed) // Return HTTP 405 Method Not Allowed if it's not POST
+	if r.Method != http.MethodPost { 
+		w.WriteHeader(http.StatusMethodNotAllowed) 
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body) // Read the request body
+	body, err := ioutil.ReadAll(r.Body) 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) // Return HTTP 500 Internal Server Error if there's an error reading the body
+		w.WriteHeader(http.StatusInternalServerError) 
 		return
 	}
 
-	fmt.Println("Information: Process with PID", string(body), "has been deleted") // Print the information about the deleted process
-	w.WriteHeader(http.StatusOK) // Set HTTP 200 OK status code
-	fmt.Fprintln(w, "Process deleted") // Write the response message to the response writer
+	pid, err := strconv.Atoi(string(body)) 
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest) 
+		fmt.Fprintln(w, "Error: Invalid PID")
+		return
+	}
+
+	cmd := exec.Command("sudo", "kill", strconv.Itoa(pid)) 
+	err = cmd.Run()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError) 
+		fmt.Fprintln(w, "Error: It is not possible to kill the process")
+		return
+	}
+
+	fmt.Println("Information: Process with PID", pid, "has been deleted") 
+	w.WriteHeader(http.StatusOK)              
+	fmt.Fprintln(w, "Process deleted")        
 }
+
 
 func main() {
 	fmt.Println("************************************************************")
