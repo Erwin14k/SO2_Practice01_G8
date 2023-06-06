@@ -22,16 +22,18 @@ const Principal=()=>{
 
       const fetchData = async () => {
          try{
-            const response = await fetch(`http://${process.env.REACT_APP_PUERTO}:4200/getAll`);
+            const response = await fetch(`http://${process.env.REACT_APP_PUERTO}:8080/tasks`);
             const data = await response.json();
-            console.log(data);
+            //console.log(data);
+            console.log("F",data.AllGenerales);
             setAllGenerales(data.AllGenerales);
-            setAllProcesos(data.AllProcesos);
-            setAllTipoProcesos(data.AllTipoProcesos);
+            setAllProcesos(data.AllTipoProcesos );
+            setAllTipoProcesos(data.AllProcesos);
             console.log("===== Get =====")
          }catch(error){
             console.log("===== Get Err =====")
-            alert(error)
+            console.log(error)
+            //alert(error)
          }
       }
 

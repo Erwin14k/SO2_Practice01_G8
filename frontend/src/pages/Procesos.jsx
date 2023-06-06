@@ -27,7 +27,7 @@ const Procesos=({AllTipoProcesos,AllProcesos,AllGenerales})=>{
  
          <br/>
          <br/>
-         <div style={{marginLeft:500,marginRight:500}}>
+         <div style={{marginLeft:100,marginRight:100}}>
             <TableContainer component={Paper} >
                <Table aria-label="simple table" >
                   <TableHead  style={{backgroundColor:"#FFE659"}}>

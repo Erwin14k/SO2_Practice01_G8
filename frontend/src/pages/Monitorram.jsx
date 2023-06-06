@@ -3,10 +3,12 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import { Line } from '@ant-design/plots';
 
+   let dataTemp = [];
 const Monitorram=({AllGenerales})=>{ 
    AllGenerales = AllGenerales.length > 0 ? AllGenerales : [{ramocupada:0,totalram:0}];
+   dataTemp.push({ramocupada:AllGenerales[0].ramocupada,totalram:AllGenerales[0].totalram});
 
-   const data = AllGenerales.map((item,index) => {
+   const data = dataTemp.map((item,index) => {
       return {
         year: `T${index}`,
         value: (item.ramocupada/item.totalram*100 ).toFixed(2)

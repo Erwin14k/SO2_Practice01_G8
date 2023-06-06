@@ -1,12 +1,17 @@
-import React from 'react'
+import React, {useState} from 'react'
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import { Line } from '@ant-design/plots';
 
+
+   let dataTemp = [];
+
 const Monitorcpu=({AllGenerales})=>{ 
    AllGenerales = AllGenerales.length > 0 ? AllGenerales : [{totalcpu:0}];
+   dataTemp.push({totalcpu:AllGenerales[0].totalcpu});
 
-   const data = AllGenerales.map((item,index) => {
+
+   const data = dataTemp.map((item,index) => {
       return {
         year: `T${index}`,
         value: item.totalcpu

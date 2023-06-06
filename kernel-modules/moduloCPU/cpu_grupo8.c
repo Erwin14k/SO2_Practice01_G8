@@ -117,10 +117,10 @@ static int escribir_archivo(struct seq_file *archivo, void *v)
             seq_printf(archivo, ",\"nombre\":");
             seq_printf(archivo, "\"%s\"", cpu->comm);
             seq_printf(archivo, ",\"usuario\": \"");
-            seq_printf(archivo, "%s", cpu->real_cred->uid);
+            seq_printf(archivo, "%d", cpu->real_cred->uid);
             seq_printf(archivo, "\",\"estado\": \"");
             seq_printf(archivo, "%s", obtain_state(cpu->__state));
-            seq_printf("\"");
+	    seq_printf(archivo, "\"");
             if (cpu->mm) {
                 ram = (get_mm_rss(cpu->mm)<<PAGE_SHIFT)/(1024*1024); // MB
                 seq_printf(archivo, ",\"ram\":");

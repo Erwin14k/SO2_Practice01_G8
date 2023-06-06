@@ -1,0 +1,1 @@
+cmd_/home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloCPU/cpu_grupo8.mod := printf '%s\n'   cpu_grupo8.o | awk '!x[$$0]++ { print("/home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloCPU/"$$0) }' > /home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloCPU/cpu_grupo8.mod

@@ -43,26 +43,57 @@ function AdministradorTareas({AllProcesos,AllGenerales}) {
     setProcesosDesplegados((prev) => ({ ...prev, [pid]: !prev[pid] }));
   };
 
+  const handleKill = async(pid) => {
+    console.log(pid);
+    try {
+      const response = await fetch(`http://${process.env.REACT_APP_PUERTO}:8080/tasks`, {
+        method: 'POST',
+        body: pid, // Cuerpo de la solicitud POST, asegúrate de que sea un número entero válido
+        headers: {
+          'Content-Type': 'text/plain'
+        }
+      });
+  
+      if (response.ok) {
+        console.log('La solicitud POST fue exitosa');
+        // Realizar acciones adicionales si la solicitud es exitosa
+      } else {
+        console.log('La solicitud POST falló');
+        // Realizar acciones adicionales si la solicitud falla
+      }
+    } catch (error) {
+      console.log('Error al realizar la solicitud POST:', error);
+      // Realizar acciones adicionales en caso de error
+    }
+  };
+
+
   const crearFilas = (procesos) => {
     return procesos.map((proceso) => (
-      <React.Fragment key={proceso.Pid}>
-        <tr className={procesosDesplegados[proceso.Pid] && 'desplegado'}>
-          <td style={{backgroundColor: `${proceso.Pid === 0 ||!AllProcesos.some((q) => q.Pid === proceso.Padre) ? "#FFE659": "" }`}} >{proceso.Pid}</td>
-          <td>{proceso.Nombre}</td>
-          <td>{proceso.UsuarioName}</td>
-          <td>{proceso.Estado}</td>
-          <td>{(proceso.Ram/(AllGenerales[AllGenerales.length-1].totalram-Math.floor(Math.random() * (600 - 500 + 1) + 500))*100).toFixed(2)}</td>
-          <td>{proceso.Padre}</td>
+      <React.Fragment key={proceso.pid}>
+        <tr className={procesosDesplegados[proceso.pid] && 'desplegado'}>
+          <td style={{backgroundColor: `${proceso.pid === 0 ||!AllProcesos.some((q) => q.pid === proceso.padre) ? "#FFE659": "" }`}} >{proceso.pid}</td>
+          <td>{proceso.nombre}</td>
+          <td>{proceso.usuario}</td>
+          <td>{proceso.estado}</td>
+          <td>{(proceso.ram/(AllGenerales[AllGenerales.length-1].totalram-Math.floor(Math.random() * (600 - 500 + 1) + 500))*100).toFixed(2)}</td>
+          <td>{proceso.padre}</td>
           <td>
-            {AllProcesos.filter((p) => p.Padre === proceso.Pid).length > 0 && (
-              <button onClick={() => handleDesplegarProcesos(proceso.Pid)}>
-                {procesosDesplegados[proceso.Pid] ? '-' : '+'}
+            {AllProcesos.filter((p) => p.padre === proceso.pid).length > 0 && (
+              <button onClick={() => handleDesplegarProcesos(proceso.pid)}>
+                {procesosDesplegados[proceso.pid] ? '-' : '+'}
               </button>
             )}
           </td>
+          <td>
+              <button onClick={() => handleKill(proceso.pid)}>
+               x 
+              </button>
+          
+          </td>
         </tr>
-        {procesosDesplegados[proceso.Pid] &&
-          crearFilas(AllProcesos.filter((p) => p.Padre === proceso.Pid))}
+        {procesosDesplegados[proceso.pid] &&
+          crearFilas(AllProcesos.filter((p) => p.padre === proceso.pid))}
       </React.Fragment>
     ));
   };
@@ -79,11 +110,12 @@ function AdministradorTareas({AllProcesos,AllGenerales}) {
             <th style={{width: 200}}><Typography variant="h5" color="inherit" component="div"><b>Estado</b></Typography></th>
             <th style={{width: 200}}><Typography variant="h5" color="inherit" component="div"><b>Ram (%)</b></Typography></th>
             <th style={{width: 200}}><Typography variant="h5" color="inherit" component="div"><b>Padre</b></Typography></th>
-            <th style={{width: 200}}><Typography variant="h5" color="inherit" component="div"><b>Acción</b></Typography></th>
+            <th style={{width: 200}}><Typography variant="h5" color="inherit" component="div"><b>Show More</b></Typography></th>
+            <th style={{width: 200}}><Typography variant="h5" color="inherit" component="div"><b>Kill</b></Typography></th>
           </tr>
         </thead>
         <tbody>
-          {crearFilas(AllProcesos.filter((p) => p.Padre === 0 || !AllProcesos.some((q) => q.Pid === p.Padre)) )}
+          {crearFilas(AllProcesos.filter((p) => p.padre === 0 || !AllProcesos.some((q) => q.pid === p.padre)) )}
         </tbody>
       </table>
 
