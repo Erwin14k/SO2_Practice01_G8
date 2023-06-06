@@ -1,8 +1,7 @@
 import React from 'react'
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
-import { Line } from '@ant-design/plots';
-import {CanvasJSChart} from 'canvasjs-react-charts'
+import { CanvasJSChart } from 'canvasjs-react-charts'
 
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -16,63 +15,33 @@ const Monitorram = ({ AllGenerales }) => {
    AllGenerales = AllGenerales.length > 0 ? AllGenerales : [{ ramocupada: 0, totalram: 0 }];
    dataTemp.push({ ramocupada: AllGenerales[0].ramocupada, totalram: AllGenerales[0].totalram });
 
-   const data = dataTemp.map((item, index) => {
-      return {
-         year: `T${index}`,
-         value: (item.ramocupada).toFixed(2)
-      }
+   const data2 = dataTemp.map((item, index) => {
+      return { x: index, y: item.ramocupada }
    }).slice(-20);
 
-   const data2 = dataTemp.map((item, index) => {
-      return {
-         y: `T${index}`,
-         x: (item.ramocupada).toFixed(2)
-      }
-   }).slice(-20);
-   
+
    const options = {
       animationEnabled: true,
       exportEnabled: true,
       theme: "light2", // "light1", "dark1", "dark2"
-      title:{
-         text: "Bounce Rate by Week of Year"
+      title: {
+         text: "Uso de Memoria"
       },
       axisY: {
-         title: "Bounce Rate",
-         suffix: "%"
+         title: "MEMORIA",
+         suffix: "MB"
       },
       axisX: {
-         title: "Week of Year",
-         prefix: "W",
+         title: "TIMESTAMP",
+         prefix: "T",
          interval: 2
       },
       data: [{
          type: "line",
-         toolTipContent: "Week {x}: {y}%",
+         toolTipContent: "T {x}: {y} MB",
          dataPoints: data2
       }]
    }
-
-
-
-   const config = {
-      data,
-      autoFit: false,
-      xField: 'year',
-      yField: 'value',
-      point: {
-         size: 5,
-         shape: 'diamond',
-      },
-      label: {
-         style: {
-            fill: '#aaa',
-         },
-      },
-      color: '#D921F7'
-   };
-
-
 
    return (
       <>
@@ -88,17 +57,15 @@ const Monitorram = ({ AllGenerales }) => {
          <br />
          <br />
          <div>
-        
-      </div>
-      <CanvasJSChart options = {options}/>
-         {/* <div className='centerRam' >
-             Utilización RAM (MB)<br /><br />
-   <Line {...config} /> 
-    </div>*/}
-        
 
-       
-    
+         </div>
+
+
+         <div className='centerRam' >
+            <CanvasJSChart options={options} />
+         </div>
+
+
          <br />
          <br />
          <Paper >

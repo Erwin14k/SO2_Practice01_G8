@@ -15,7 +15,7 @@ const Navbar=({handleClick})=>{
         <Toolbar>
          
          <TerminalIcon sx={{  fontSize: 65 }} style={{marginRight: 20 }}/>
-         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>P1 - S02</Typography>
+         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>Práctica 1 - S02</Typography>
          
          <Button color="inherit" style={{fontSize: 20}} onClick={handleClick} >Procesos</Button>
          <Button color="inherit" style={{fontSize: 20}} onClick={handleClick}>Monitor CPU</Button>

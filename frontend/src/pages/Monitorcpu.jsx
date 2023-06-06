@@ -1,8 +1,7 @@
 import React from 'react'
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
-import { Line } from '@ant-design/plots';
-
+import { CanvasJSChart } from 'canvasjs-react-charts'
 
    let dataTemp = [];
 
@@ -10,32 +9,33 @@ const Monitorcpu=({AllGenerales})=>{
    AllGenerales = AllGenerales.length > 0 ? AllGenerales : [{totalcpu:0}];
    dataTemp.push({totalcpu:AllGenerales[0].totalcpu});
 
+   const data2 = dataTemp.map((item, index) => {
+      return { x: index, y: item.totalcpu }
+   }).slice(-20);
 
-   const data = dataTemp.map((item,index) => {
-      return {
-        year: `T${index}`,
-        value: item.totalcpu
-      }
-    }).slice(-20);
-  
-   const config = {
-      data,
-      autoFit: false,
-      xField: 'year',
-      yField: 'value',
-      point: {
-        size: 5,
-        shape: 'diamond',
+   const options = {
+      animationEnabled: true,
+      exportEnabled: true,
+      theme: "light2", // "light1", "dark1", "dark2"
+      title: {
+         text: "Uso de CPU"
       },
-      label: {
-        style: {
-          fill: '#aaa',
-        },
+      axisY: {
+         title: "CPU",
+         suffix: "%"
       },
-      color: '#4AC86F'
-    };
+      axisX: {
+         title: "TIMESTAMP",
+         prefix: "T",
+         interval: 2
+      },
+      data: [{
+         type: "line",
+         toolTipContent: "T {x}: {y} %",
+         dataPoints: data2
+      }]
+   }
   
-
    return (
       <>
          <br/>
@@ -50,8 +50,8 @@ const Monitorcpu=({AllGenerales})=>{
          <br/>
          <br/>
          <div className='center' >
-            % Utilización CPU<br/><br/>
-            <Line {...config} />
+           
+            <CanvasJSChart options={options} />
          </div>
 
 
