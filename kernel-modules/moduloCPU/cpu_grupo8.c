@@ -148,6 +148,7 @@ static int escribir_archivo(struct seq_file *archivo, void *v)
                     count_zombie++;
                     break;
                 default:
+		    count_sleeping++;
                     break;
             }
         }
