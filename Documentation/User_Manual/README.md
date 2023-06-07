@@ -20,22 +20,22 @@
 
 Este monitor mostrará toda la información detallada de la memoria utilizada en tiempo real de manera intuitiva mediante una gráfica, además abajo de esta se encuentran los datos de uso de la memoria.
 
-![Untitled](Images/ram.png)
+![Untitled](images/ram.png)
 
 ## Monitor CPU
 
 Este monitor mostrará toda la información detallada de la memoria utilizada en tiempo real de manera intuitiva mediante una gráfica, además abajo de esta se encuentran los datos de uso del CPU.
 
-![Untitled](Images/cpu.png)
+![Untitled](images/cpu.png)
 
 ## Contador de procesos
 
 Mediante una tabla se le mostrará al usuario un conteo general de los procesos en base a su estado.
 
-![Untitled](Images/counter.png)
+![Untitled](images/counter.png)
 
 ## Árbol de procesos
 
 Esta sección mostrará todos los procesos existentes con toda su información, además tendrá disponible un botón para ver los procesos hijos de un proceso si es que tuviera, y además un botón mediante el cual podremos terminar con la ejecución de un proceso.
 
-![Untitled](Images/tree.png)
+![Untitled](images/tree.png)
