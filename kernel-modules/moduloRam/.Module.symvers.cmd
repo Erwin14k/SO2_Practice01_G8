@@ -1,1 +1,0 @@
-cmd_/home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloRam/Module.symvers := sed 's/ko$$/o/' /home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloRam/modules.order | scripts/mod/modpost -m -a  -o /home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloRam/Module.symvers -e -i Module.symvers   -T -

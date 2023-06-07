@@ -1,1 +1,0 @@
-cmd_/home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloRam/mem_grupo8.mod := printf '%s\n'   mem_grupo8.o | awk '!x[$$0]++ { print("/home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloRam/"$$0) }' > /home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloRam/mem_grupo8.mod

@@ -1,1 +1,0 @@
-cmd_/home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloRam/modules.order := {   echo /home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloRam/mem_grupo8.ko; :; } | awk '!x[$$0]++' - > /home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloRam/modules.order
