@@ -28,6 +28,21 @@ sudo apt install build-essential
 sudo apt-get install manpages-dev
 ```
 
+## Instalación Java
+
+```bash
+// Actualizar el sistema
+sudo apt update
+// Instalar lo necesario para Java
+sudo apt install default-jdk
+sudo apt install default-jre
+sudo apt update
+// Verificar si java fue correctamente instalado en el sistema
+java - version
+```
+
+![Untitled](images/java.png)
+
 # Módulos
 
 ## Compilación de los módulos
