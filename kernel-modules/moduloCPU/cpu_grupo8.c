@@ -1,51 +1,66 @@
-#include <linux/mm.h>
-#include <linux/proc_fs.h>
-#include <linux/fs.h>
-#include <linux/init.h>
-#include <linux/kernel.h>
+//Allows access to functions and structures necessary for the creation and administration of kernel modules. (Mandatory)
 #include <linux/module.h>
+//Header para usar KERN_INFO
+#include <linux/kernel.h>
+//Header para las funciones module_init y module_exit
+#include <linux/init.h>
+//Header necesary to use proc_ops/file_operations
+#include <linux/proc_fs.h>
+// Header para usar la lib seq_file y manejar el archivo en /proc*
 #include <linux/seq_file.h>
-#include <linux/stat.h>
-#include <linux/string.h>
-#include <linux/uaccess.h>
-#include <linux/sysinfo.h>
-#include <linux/sched.h>
+//Header to use the memory info pages
+#include <linux/mm.h>
+// Header to use the task_struct
+#include <linux/sched.h> 
+// Use for filp_open and filp_close
+#include <linux/fs.h> 
+// Reading process info 0_RDONLY
+#include <linux/stat.h> 
+// library for using string functions like mmemset ( to clear the buffer)
+#include <linux/string.h>  
+// functionalities for secure copi for copy_from_user (user space to kernel space)
+#include <linux/uaccess.h> 
+// Information about memory / for si_meminfo
+#include <linux/sysinfo.h> 
+
 
 
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Modulo RAM, Laboratorio Sistemas Operativos 2");
-MODULE_AUTHOR("Sergie Daniel Arizandieta Yol");
+MODULE_DESCRIPTION("Modulo CPU, Laboratorio Sistemas Operativos 2");
+MODULE_AUTHOR("GRUPO 8");
 
 static int calcular_porcentaje_cpu_total(void)
 {
+    // create a file pointer
     struct file *archivo;
-    char lectura[256];
+    char lectura[256]; // buffer
     //char *etiqueta;
-    int usuario, niced, sistema, idle, iowait, irq, suaveirq, steal, guest, guest_nice;
+    int usuario, niced, sistema, idle, iowait, irq, suaveirq, steal, guest, guest_nice; // varibles to store the CPU times
     int total;
     int porcentaje;
 
-    archivo = filp_open("/proc/stat", O_RDONLY, 0);
+    archivo = filp_open("/proc/stat", O_RDONLY, 0); // open the file for reading
     if (IS_ERR(archivo)) {
         printk(KERN_ALERT "No se pudo abrir el archivo /proc/stat\n");
         return -1;
     }
     
-    memset(lectura, 0, sizeof(lectura));
-    kernel_read(archivo, lectura, sizeof(lectura) - 1, &archivo->f_pos);
+    memset(lectura, 0, sizeof(lectura)); // clear the buffer
+    kernel_read(archivo, lectura, sizeof(lectura) - 1, &archivo->f_pos); // read the file
 
     sscanf(lectura, "cpu %d %d %d %d %d %d %d %d %d %d",
-           &usuario, &niced, &sistema, &idle, &iowait, &irq, &suaveirq, &steal, &guest, &guest_nice);
+           &usuario, &niced, &sistema, &idle, &iowait, &irq, &suaveirq, &steal, &guest, &guest_nice); // storte the CPU times in the variables
 
-    total = usuario + niced + sistema + idle + iowait + irq + suaveirq + steal + guest + guest_nice;
+    total = usuario + niced + sistema + idle + iowait + irq + suaveirq + steal + guest + guest_nice; // calculate the total CPU time
 
     
-    porcentaje = 100 - (idle * 100 / total);
-    filp_close(archivo, NULL);
+    porcentaje = 100 - (idle * 100 / total); // calculate the CPU usage percentage
+    filp_close(archivo, NULL); //   close the file
     
     return porcentaje;
 }
 
+// Function to get the state of the process from the state number
 static const char* obtain_state(int estado)
 {
     const char* estado_str;
@@ -72,6 +87,7 @@ static const char* obtain_state(int estado)
     return estado_str;
 }
 
+// Function to write the information to the file
 static int escribir_archivo(struct seq_file *archivo, void *v)
 {
     int porcentaje;
@@ -152,19 +168,20 @@ static int escribir_archivo(struct seq_file *archivo, void *v)
     return 0;
 }
 
-//Funcion que se ejecuta cuando se le hace un cat al modulo.
+//Funcion executed every time with a cat command v
 static int al_abrir(struct inode *inode, struct file *file)
 {
     return single_open(file, escribir_archivo, NULL);
 }
 
-// Si el Kernel es 5.6 o mayor
+// If the kernel is 5.6 or higher
 static struct proc_ops operaciones =
 {
     .proc_open = al_abrir,
     .proc_read = seq_read
 };
 
+// Function to display the message when the module is created with insmod
 static int _insert(void)
 {
     proc_create("cpu_grupo8", 0, NULL, &operaciones);
@@ -172,6 +189,7 @@ static int _insert(void)
     return 0;
 }
 
+// Function to display the message when the module is deleted with rmmod
 static void _remove(void)
 {
     remove_proc_entry("cpu_grupo8", NULL);

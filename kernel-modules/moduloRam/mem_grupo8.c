@@ -1,11 +1,12 @@
-#include <linux/mm.h> 
 //Header to use the memory info
+#include <linux/mm.h> 
+//Allows access to functions and structures necessary for the creation and administration of kernel modules. (Mandatory)
 #include <linux/module.h>
 // To use kern info
 #include <linux/kernel.h>
 //Header to use the init and exit macros
 #include <linux/init.h>
-//Header neccesary to use proc_fs
+//Header necesary to use proc_ops/file_operations
 #include <linux/proc_fs.h>
 /* for copy_from_user */
 #include <asm/uaccess.h>	
@@ -16,7 +17,7 @@
 // Module info
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Modulo RAM, Laboratorio Sistemas Operativos 2");
-MODULE_AUTHOR("Sergie Daniel Arizandieta Yol");
+MODULE_AUTHOR("GRUPO8");
 
 // Function to write the file
 static int escribir_archivo(struct seq_file *archivo, void *v)
