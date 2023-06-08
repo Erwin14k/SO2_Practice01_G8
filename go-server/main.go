@@ -1,18 +1,19 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/rs/cors"
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
-	"os/exec"
-	"strconv"
-	"strings"
-	"log"
-	"fmt"
+	"github.com/gorilla/mux" // Package for creating HTTP routers
+	"github.com/rs/cors" // Package for Cross-Origin Resource Sharing (CORS) support
+	"encoding/json" // Package for JSON encoding and decoding
+	"io/ioutil" // Package for reading and writing files and data streams
+	"net/http" // Package for HTTP client and server implementations
+	"os/exec" // Package for executing external commands
+	"strconv" // Package for string conversions
+	"strings" // Package for manipulating strings
+	"log" // Package for logging
+	"fmt" // Package for formatted I/O
 )
 
+// Process represents a process with its properties
 type Process struct {
 	Pid     int    `json:"pid"`
 	Nombre  string `json:"nombre"`
@@ -22,6 +23,7 @@ type Process struct {
 	Padre   int    `json:"padre"`
 }
 
+// CPUInfo represents CPU information and process tasks
 type CPUInfo struct {
 	TotalCPU int       `json:"totalcpu"`
 	Running  int       `json:"running"`
@@ -32,12 +34,14 @@ type CPUInfo struct {
 	Tasks    []Process `json:"tasks"`
 }
 
+// RAMInfo represents RAM information
 type RAMInfo struct {
 	TotalRAM    int `json:"totalram"`
 	RAMLibre    int `json:"ramlibre"`
 	RAMOcupada  int `json:"ramocupada"`
 }
 
+// General represents general system information
 type general struct {
 	TotalRAM    int `json:"totalram"`
 	RAMLibre    int `json:"ramlibre"`
@@ -45,6 +49,7 @@ type general struct {
 	TotalCPU    int `json:"totalcpu"`
 }
 
+// Counters represents process counters
 type counters struct {
 	Running  int       `json:"running"`
 	Sleeping int       `json:"sleeping"`
@@ -53,24 +58,26 @@ type counters struct {
 	Total    int       `json:"total"`
 }
 
+// AllData represents all system data
 type AllData struct {
 	AllGenerales    []general    `json:"AllGenerales"`
 	AllTipoProcesos []Process  `json:"AllTipoProcesos"`
 	AllProcesos     []counters   `json:"AllProcesos"`
 }
 
+// createData creates the system data
 func createData() (string, error) {
-
+	// read /proc/mem_grupo8 file
 	outRAM, err := ioutil.ReadFile("/proc/mem_grupo8")
 	if err != nil {
 		fmt.Println(err)
 	}
-
+	// read /proc/cpu_grupo8 file
 	outCPU, err := ioutil.ReadFile("/proc/cpu_grupo8")
 	if err != nil {
 		fmt.Println(err)
 	}
-
+	// --------- PROCESS ---------
 	var cpuInfo CPUInfo
 	err = json.Unmarshal(outCPU, &cpuInfo)
 	if err != nil {
@@ -108,7 +115,8 @@ func createData() (string, error) {
 		fmt.Println("Error: Ram json unmarshal failed", err)
 		return "", err
 	}
-
+	
+	// allData struct variable contains the data to send to frontend
 	allData := AllData{
 		AllGenerales: []general{
 			{
@@ -130,6 +138,7 @@ func createData() (string, error) {
 		},
 	}
 
+	// Marshal allData variable to json
 	allDataJSON, err := json.Marshal(allData)
 	if err != nil {
 		fmt.Println("Error: AllData json marshal failed", err)
@@ -139,21 +148,21 @@ func createData() (string, error) {
 	return string(allDataJSON), nil
 }
 
+// handleGet handles the GET request
 func handleGet(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("GET")
 
-	allData, err := createData() // Obtener todos los datos de los procesos en formato JSON
+	allData, err := createData() // Get all process data in JSON format
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) // Devolver HTTP 500 Internal Server Error si los datos están vacíos
+		w.WriteHeader(http.StatusInternalServerError) // Return HTTP 500 Internal Server Error if data is empty
 		return
 	}
 
-	//fmt.Println(allData)
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprint(w, allData)              
-
+	fmt.Fprint(w, allData)
 }
 
+// handlePost handles the POST request
 func handlePost(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body) // Read the request body
@@ -182,8 +191,9 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Process deleted")        // Write the response message to the response writer
 }
 
+// handleRoute handles the route "/"
 func handleRoute(w http.ResponseWriter, r *http.Request){
-	fmt.Fprintf(w, "Weltome to my  API :D")
+	fmt.Fprintf(w, "Welcome to my API :D")
 }
 
 func main() {
@@ -191,14 +201,13 @@ func main() {
 	fmt.Println("*                 SO2 Practica 1 - Grupo 8                 *")
 	fmt.Println("************************************************************")
 
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", handleRoute)
-	router.HandleFunc("/tasks", handlePost).Methods("POST")
-	router.HandleFunc("/tasks", handleGet).Methods("GET")
+	router := mux.NewRouter().StrictSlash(true) // Create a new router instance
+	router.HandleFunc("/", handleRoute) // Set the handler function for the root route ("/")
+	router.HandleFunc("/tasks", handlePost).Methods("POST") // Set the handler function for the "/tasks" route with POST method
+	router.HandleFunc("/tasks", handleGet).Methods("GET") // Set the handler function for the "/tasks" route with GET method
 
-	handler := cors.Default().Handler(router)
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	handler := cors.Default().Handler(router) // Create a new CORS handler with default settings
+	log.Fatal(http.ListenAndServe(":8080", handler)) // Start the HTTP server and listen on port 8080
 
 	fmt.Println("Server on port 8080")
-
 }
