@@ -1,4 +1,3 @@
-#include <linux/sysinfo.h>
 #include <linux/mm.h> 
 //Header para la ram
 #include <linux/module.h>

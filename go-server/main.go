@@ -85,7 +85,13 @@ func createData() (string, error) {
 			return "", err
 		}
 
+		// Sh -> Interpreter
+		// -c -> Read the command from the argument string
+		// grep -m 1 -> Show the first match
+		// cut -d: -f1 -> Cuts the string at the first delimiter and displays the first field
 		cmdUsr := exec.Command("sh", "-c", "grep -m 1 '"+strconv.Itoa(uid)+":' /etc/passwd | cut -d: -f1")
+		
+
 		outUsr, err := cmdUsr.Output()
 		if err != nil {
 			fmt.Println("Error: Failed to get username for UID ", task.Usuario, err)
