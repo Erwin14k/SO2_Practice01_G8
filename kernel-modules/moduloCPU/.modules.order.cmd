@@ -1,0 +1,1 @@
+cmd_/home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloCPU/modules.order := {   echo /home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloCPU/cpu_grupo8.ko; :; } | awk '!x[$$0]++' - > /home/ubuntu/SO2_Practice01_G8/kernel-modules/moduloCPU/modules.order
